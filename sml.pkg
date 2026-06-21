@@ -1,0 +1,4 @@
+package github.com/sjqtentacles/sml-raster
+require {
+  github.com/sjqtentacles/sml-image
+}
