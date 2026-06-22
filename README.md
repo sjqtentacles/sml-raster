@@ -35,6 +35,9 @@ All operations live in `structure Raster :> RASTER` and have the form
 | `fillRect`    | Filled rectangle                                       |
 | `circle`      | Midpoint circle outline                                |
 | `fillCircle`  | Filled circle (disk)                                   |
+| `ellipse`     | Midpoint ellipse outline (radii `rx`, `ry`)            |
+| `fillEllipse` | Filled ellipse, bounded by the midpoint outline        |
+| `arc`         | Circular arc over an angular sweep (full turn = circle)|
 | `triangle`    | Triangle outline                                       |
 | `fillTriangle`| Scanline-filled triangle                               |
 | `polyline`    | Connected sequence of line segments                    |
@@ -58,6 +61,20 @@ per channel, where `a` is the source alpha (`0`–`255`). The result alpha is
 composited the same way against the destination alpha. An alpha of `255`
 overwrites; an alpha of `0` leaves the destination unchanged.
 
+### Ellipses and arcs
+
+`ellipse`/`fillEllipse` draw a midpoint ellipse centered at `(cx, cy)` with
+independent radii `rx`, `ry`; the filled variant is bounded exactly by the
+outline. `arc` draws a circular arc of radius `r` over the counter-clockwise
+sweep from `startAngle` to `endAngle` (radians, screen orientation: +x right,
++y down); a sweep of a full turn (`>= 2*pi`) draws the same pixels as `circle`.
+
+```sml
+val e = Raster.ellipse img { cx = 40, cy = 30, rx = 20, ry = 12 } red
+val a = Raster.arc img
+          { cx = 40, cy = 30, r = 20, startAngle = 0.0, endAngle = Math.pi } blue
+```
+
 ## Signature
 
 ```sml
@@ -74,6 +91,10 @@ sig
   val fillRect    : image -> {x:int, y:int, w:int, h:int} -> rgba8 -> image
   val circle      : image -> {cx:int, cy:int, r:int} -> rgba8 -> image
   val fillCircle  : image -> {cx:int, cy:int, r:int} -> rgba8 -> image
+  val ellipse     : image -> {cx:int, cy:int, rx:int, ry:int} -> rgba8 -> image
+  val fillEllipse : image -> {cx:int, cy:int, rx:int, ry:int} -> rgba8 -> image
+  val arc         : image -> {cx:int, cy:int, r:int, startAngle:real, endAngle:real}
+                      -> rgba8 -> image
   val triangle    : image -> (int*int)*(int*int)*(int*int) -> rgba8 -> image
   val fillTriangle: image -> (int*int)*(int*int)*(int*int) -> rgba8 -> image
   val polyline    : image -> (int*int) list -> rgba8 -> image
@@ -153,7 +174,10 @@ make test-poly   # Poly/ML
 make all-tests   # both
 ```
 
-Both compilers report `88 passed, 0 failed`.
+Both compilers report `106 passed, 0 failed`. The ellipse arc tests assert
+that a full-turn `arc` produces a byte-identical framebuffer to `circle`, that
+the rasterized `ellipse` is symmetric about both axes, and that `fillEllipse`
+is bounded exactly by the outline.
 
 ## License
 

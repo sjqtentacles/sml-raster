@@ -139,6 +139,67 @@ struct
        checkPixel "circle center unset (outline only)" img (8,8) transparent
     end;
 
+    section "ellipse outline";
+    let
+      val cx = 12 and cy = 12 and rx = 8 and ry = 5
+      val img = R.ellipse (mk (25,25)) { cx = cx, cy = cy, rx = rx, ry = ry } red
+      (* symmetry about x = cx and y = cy across the whole framebuffer *)
+      fun symmetric () =
+        let
+          fun loopY y =
+            if y >= 25 then true
+            else
+              let
+                fun loopX x =
+                  if x >= 25 then true
+                  else
+                    eqPx (I.getPixel img (x, y), I.getPixel img (2*cx - x, y))
+                    andalso eqPx (I.getPixel img (x, y), I.getPixel img (x, 2*cy - y))
+                    andalso loopX (x + 1)
+              in loopX 0 andalso loopY (y + 1) end
+        in loopY 0 end
+    in
+      checkPixel "ellipse east extreme" img (cx+rx, cy) red;
+      checkPixel "ellipse west extreme" img (cx-rx, cy) red;
+      checkPixel "ellipse north extreme" img (cx, cy-ry) red;
+      checkPixel "ellipse south extreme" img (cx, cy+ry) red;
+      checkPixel "ellipse center unset (outline only)" img (cx, cy) transparent;
+      checkPixel "ellipse far corner unset" img (0,0) transparent;
+      check "ellipse is symmetric about both axes" (symmetric ())
+    end;
+
+    section "fillEllipse";
+    let
+      val cx = 12 and cy = 12 and rx = 8 and ry = 5
+      val img = R.fillEllipse (mk (25,25)) { cx = cx, cy = cy, rx = rx, ry = ry } green
+    in
+      checkPixel "fillEllipse center" img (cx, cy) green;
+      checkPixel "fillEllipse interior" img (cx+4, cy+1) green;
+      checkPixel "fillEllipse east extreme" img (cx+rx, cy) green;
+      checkPixel "fillEllipse north extreme" img (cx, cy-ry) green;
+      checkPixel "fillEllipse just past east extreme unset" img (cx+rx+1, cy) transparent;
+      checkPixel "fillEllipse far corner unset" img (0,0) transparent
+    end;
+
+    section "arc";
+    let
+      val cx = 12 and cy = 12 and r = 8
+      val circ = R.circle (mk (25,25)) { cx = cx, cy = cy, r = r } blue
+      val full = R.arc (mk (25,25))
+                   { cx = cx, cy = cy, r = r, startAngle = 0.0, endAngle = 2.0 * Math.pi } blue
+      val half = R.arc (mk (25,25))
+                   { cx = cx, cy = cy, r = r, startAngle = 0.0, endAngle = Math.pi } blue
+    in
+      check "full-turn arc equals circle primitive" (#data full = #data circ);
+      checkPixel "half arc covers +y semicircle" half (cx, cy+r) blue;
+      checkPixel "half arc excludes -y semicircle" half (cx, cy-r) transparent;
+      checkPixel "half arc start endpoint set" half (cx+r, cy) blue;
+      check "arc off-screen center does not raise"
+        (let val _ = R.arc (mk (4,4))
+                        { cx = ~5, cy = ~5, r = 3, startAngle = 0.0, endAngle = 1.0 } blue
+         in true end)
+    end;
+
     section "triangle outline";
     let val img = R.triangle (mk (8,8)) ((0,0),(6,0),(0,6)) white
     in checkPixel "triangle vertex A" img (0,0) white;
