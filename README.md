@@ -1,5 +1,7 @@
 # sml-raster
 
+[![CI](https://github.com/sjqtentacles/sml-raster/actions/workflows/ci.yml/badge.svg)](https://github.com/sjqtentacles/sml-raster/actions/workflows/ci.yml)
+
 A small, pure 2D rasterizer for Standard ML. It draws shapes — lines,
 rectangles, circles, triangles, polygons — into the 8-bit RGBA image buffer
 provided by [`sml-image`](https://github.com/sjqtentacles/sml-image), and
